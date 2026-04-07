@@ -1,48 +1,81 @@
-# Speechify Python Functional Test
+# SSML Runtime Engine
 
-## Project Overview
+Deterministic SSML parsing, validation, serialization, and caching utilities for production-grade text-to-speech and GenAI speech pipelines.
 
-The project's goal is to implement an LRU Cache Provider, an SSML Parser, and a helper function for converting an SSML Node Tree to a plain text string.
+## Overview
 
----
+SSML Runtime Engine is a lightweight Python project that implements a hand-rolled SSML parser, serializer, and runtime cache without relying on external XML parsing libraries. It is designed to validate, structure, and serialize SSML safely for text-to-speech workflows, especially in systems where deterministic output and strict input validation matter.
 
-## Task Details
+This project also includes an O(1) LRU cache to reduce repeated parsing and serialization overhead in runtime speech pipelines.
 
-### Implementation Checklist
+## Why this project matters
 
-- [ ] LRUCache: Implement a LRU Cache Provider with `get`, `has` and `set` methods.
-- [ ] parseSSML: Implement a SSML Parser that takes a SSML string and returns a SSML Node Tree.
-- [ ] ssmlNodeToText: Implement a function that takes a SSML Node Tree and recursively converts it to a plain text string.
+In AI and GenAI systems, especially text-to-speech applications, prompt integrity and deterministic formatting are critical. A malformed SSML prompt can break synthesis, produce inconsistent outputs, or create downstream debugging issues.
 
-### Setup & Run
+This project addresses that by:
+
+- enforcing strict SSML structure and attribute validation
+- generating deterministic serialized output for reproducibility
+- safely handling XML character escaping and unescaping
+- reducing repeated computation through efficient caching
+
+## Impact
+
+This project demonstrates how to build a small but production-relevant runtime layer for speech systems:
+
+- **Improves reliability** by rejecting malformed SSML before it reaches a TTS engine
+- **Supports reproducibility** through deterministic serialization and stable attribute ordering
+- **Reduces repeated runtime overhead** with an O(1) LRU cache for parsed structures
+- **Strengthens GenAI/TTS pipelines** by adding a guardrail layer between generated text and speech synthesis
+
+## Features
+
+- Hand-rolled SSML tokenizer and parser in Python
+- Abstract syntax tree style representation using `SSMLTag` and `SSMLText`
+- Deterministic SSML serializer
+- Strict attribute parsing and validation
+- XML escaping and unescaping support
+- O(1) LRU cache using hashmap + doubly linked list
+- Full unit test coverage for the required functionality
+
+## Technical Highlights
+
+### SSML Parser
+The parser:
+- tokenizes raw SSML into text, start-tag, and end-tag tokens
+- validates structure such as a single top-level `<speak>` root
+- rejects malformed attributes and mismatched tags
+- supports parsing nested SSML nodes into a tree representation
+
+### Deterministic Serialization
+The serializer:
+- converts parsed nodes back into valid SSML
+- preserves structure in a predictable format
+- sorts attributes for stable output across runs
+
+### LRU Cache
+The cache:
+- supports O(1) `get`, `set`, and `has`
+- tracks recency with a doubly linked list
+- evicts the least recently used item when capacity is exceeded
+
+## Example Use Cases
+
+- validating LLM-generated SSML before sending it to a speech engine
+- building a runtime layer for TTS orchestration systems
+- ensuring deterministic prompt serialization in speech evaluation pipelines
+- reducing repeated parse overhead in high-frequency synthesis workflows
+
+## Tech Stack
+
+- Python 3
+- Standard Library only
+- Unit Testing
+
+## Project Structure
 
 ```bash
-# Installs dependencies
-make install
-
-# Runs tests
-make test
-```
-
-### Time to Implement
-
-1 Hour 30 Minutes
-
----
-
-## Development Guidelines
-
-### Do's
-
-- Write clean, maintainable, and well-documented code.
-- Please follow the best practices and coding standards.
-- Test cases are provided for all methods; use them to ensure that your code is correct and meets our requirements.
-- You are free to use any official documentation or language references.
-- You can use the debugging tools and native IDE features (only standard Auto-Completion)
-
-### Don'ts
-
-- Do NOT use any external libraries for the implementation.
-- DO NOT use any Coding Assistants like GitHub Copilot, ChatGPT, etc or any other AI based tools.
-- DO NOT visit direct blogs or articles related to implementation of the tasks.
-- DO NOT use StackOverflow or any other forum websites.
+src/
+  lru.py
+  ssml.py
+  tests/
